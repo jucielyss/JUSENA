@@ -2,6 +2,8 @@
   "name": "Fácil Zipe",
   "description": "O Uber do emprego local. Conectando pequenos comércios a candidatos rápidos, sem a burocracia de currículos tradicionais.",
   "requestFramePermissions": [
-    "geolocation"
+    "geolocation",
+    "camera",
+    "microphone"
   ]
 }

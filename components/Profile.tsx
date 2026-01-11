@@ -1,6 +1,7 @@
 
 import React, { useState, useEffect } from 'react';
 import { UserRole, CandidateProfile, ExperienceEntry } from '../types';
+import VideoResumeManager from './VideoResumeManager';
 
 interface ProfileProps {
   role: UserRole;
@@ -16,6 +17,7 @@ const DEFAULT_PROFILE: CandidateProfile = {
   name: 'João da Silva',
   email: 'joao.silva@email.com',
   photo: null,
+  videoResume: null,
   city: 'São Paulo, SP',
   phone: '(11) 98765-4321',
   visibility: 'public',
@@ -37,6 +39,7 @@ const DEFAULT_PROFILE: CandidateProfile = {
 const Profile: React.FC<ProfileProps> = ({ role, stats, onRoleSwitch, onLogout }) => {
   const [profile, setProfile] = useState<CandidateProfile>(DEFAULT_PROFILE);
   const [toast, setToast] = useState<string | null>(null);
+  const [showVideoManager, setShowVideoManager] = useState(false);
 
   useEffect(() => {
     const saved = localStorage.getItem('candidate_profile');
@@ -64,16 +67,25 @@ const Profile: React.FC<ProfileProps> = ({ role, stats, onRoleSwitch, onLogout }
     const file = e.target.files?.[0];
     if (file) {
       const reader = new FileReader();
-      reader.onloadend = () => setProfile({ ...profile, photo: reader.result as string });
+      reader.onloadend = () => {
+        const newProfile = { ...profile, photo: reader.result as string };
+        saveProfile(newProfile);
+      };
       reader.readAsDataURL(file);
     }
+  };
+
+  const handleVideoSave = (videoData: string) => {
+    const newProfile = { ...profile, videoResume: videoData };
+    saveProfile(newProfile);
+    setShowVideoManager(false);
+    showToast("Vídeo salvo com sucesso!");
   };
 
   const toggleVisibility = () => {
     const newStatus = profile.visibility === 'public' ? 'anonymous' : 'public';
     const newProfile = { ...profile, visibility: newStatus as any };
-    setProfile(newProfile);
-    showToast(newStatus === 'public' ? "Perfil agora está público" : "Perfil agora está anônimo");
+    saveProfile(newProfile);
   };
 
   if (role === 'employer') {
@@ -98,9 +110,17 @@ const Profile: React.FC<ProfileProps> = ({ role, stats, onRoleSwitch, onLogout }
   return (
     <div className="flex-1 overflow-y-auto bg-slate-950 pb-32 no-scrollbar">
       {toast && (
-        <div className="fixed top-6 left-1/2 -translate-x-1/2 z-[100] bg-blue-600 text-white px-6 py-3 rounded-2xl shadow-2xl font-bold animate-in fade-in slide-in-from-top-4 duration-300">
+        <div className="fixed top-6 left-1/2 -translate-x-1/2 z-[110] bg-blue-600 text-white px-6 py-3 rounded-2xl shadow-2xl font-bold animate-in fade-in slide-in-from-top-4 duration-300">
           {toast}
         </div>
+      )}
+
+      {showVideoManager && (
+        <VideoResumeManager 
+          currentVideo={profile.videoResume} 
+          onSave={handleVideoSave} 
+          onClose={() => setShowVideoManager(false)} 
+        />
       )}
 
       <div className="p-6 border-b border-slate-900 sticky top-0 bg-slate-950/80 backdrop-blur-md z-40">
@@ -125,6 +145,50 @@ const Profile: React.FC<ProfileProps> = ({ role, stats, onRoleSwitch, onLogout }
             </div>
         </div>
 
+        <section className="flex flex-col items-center">
+          <div className="relative group">
+            <div className="w-32 h-32 rounded-full border-4 border-slate-900 overflow-hidden bg-slate-900 shadow-xl">
+              {profile.photo ? (
+                <img src={profile.photo} alt="Profile" className="w-full h-full object-cover" />
+              ) : (
+                <div className="w-full h-full flex items-center justify-center text-slate-700">
+                   <svg className="w-16 h-16" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path strokeLinecap="round" strokeLinejoin="round" strokeWidth="1.5" d="M16 7a4 4 0 11-8 0 4 4 0 018 0zM12 14a7 7 0 00-7 7h14a7 7 0 00-7-7z" /></svg>
+                </div>
+              )}
+            </div>
+            <label className="absolute bottom-1 right-1 bg-blue-600 text-white p-2 rounded-full border-4 border-slate-950 cursor-pointer shadow-lg active:scale-90 transition-all">
+              <svg className="w-5 h-5" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path strokeLinecap="round" strokeLinejoin="round" strokeWidth="2.5" d="M3 9a2 2 0 012-2h.93a2 2 0 001.664-.89l.812-1.22A2 2 0 0110.07 4h3.86a2 2 0 011.664.89l.812 1.22A2 2 0 0018.07 7H19a2 2 0 012 2v9a2 2 0 01-2 2H5a2 2 0 01-2-2V9z" /><path strokeLinecap="round" strokeLinejoin="round" strokeWidth="2.5" d="M15 13a3 3 0 11-6 0 3 3 0 016 0z" /></svg>
+              <input type="file" className="hidden" accept="image/*" onChange={handlePhotoChange} />
+            </label>
+          </div>
+          <div className="mt-4 text-center">
+            <h2 className="text-xl font-bold text-white">{profile.name}</h2>
+            <p className="text-sm text-slate-500">{profile.city}</p>
+          </div>
+        </section>
+
+        {/* Video Resume Section */}
+        <section className="space-y-4">
+          <h2 className="text-sm font-bold text-slate-600 uppercase tracking-widest flex items-center gap-2">Apresentação Pessoal</h2>
+          <button 
+            onClick={() => setShowVideoManager(true)}
+            className="w-full bg-slate-900 border border-slate-800 rounded-3xl p-5 flex items-center gap-4 active:bg-slate-800 transition-all"
+          >
+            <div className={`h-14 w-14 rounded-2xl flex items-center justify-center shrink-0 ${profile.videoResume ? 'bg-blue-600/20 text-blue-500' : 'bg-slate-800 text-slate-600'}`}>
+              <svg className="w-8 h-8" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path strokeLinecap="round" strokeLinejoin="round" strokeWidth="2" d="M15 10l4.553-2.276A1 1 0 0121 8.618v6.764a1 1 0 01-1.447.894L15 14M5 18h8a2 2 0 002-2V8a2 2 0 00-2-2H5a2 2 0 00-2 2v8a2 2 0 002 2z" /></svg>
+            </div>
+            <div className="text-left flex-1">
+              <h3 className="text-white font-bold">{profile.videoResume ? 'Currículo em Vídeo pronto' : 'Gravar currículo em vídeo'}</h3>
+              <p className="text-xs text-slate-500">{profile.videoResume ? 'Toque para assistir ou alterar' : 'Apareça para as empresas da sua região'}</p>
+            </div>
+            {!profile.videoResume && (
+              <div className="h-8 w-8 bg-blue-600 rounded-full flex items-center justify-center text-white shadow-lg shadow-blue-900/20">
+                <svg className="w-5 h-5" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path strokeLinecap="round" strokeLinejoin="round" strokeWidth="3" d="M12 4v16m8-8H4" /></svg>
+              </div>
+            )}
+          </button>
+        </section>
+
         <section>
           <div className="bg-slate-900 border border-slate-800 rounded-3xl p-5 shadow-sm">
             <div className="flex justify-between items-center">
@@ -142,52 +206,20 @@ const Profile: React.FC<ProfileProps> = ({ role, stats, onRoleSwitch, onLogout }
           </div>
         </section>
 
-        <section className="flex flex-col items-center">
-          <div className="relative group">
-            <div className="w-32 h-32 rounded-full border-4 border-slate-900 overflow-hidden bg-slate-900 shadow-xl">
-              {profile.photo ? (
-                <img src={profile.photo} alt="Profile" className="w-full h-full object-cover" />
-              ) : (
-                <div className="w-full h-full flex items-center justify-center text-slate-700">
-                   <svg className="w-16 h-16" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path strokeLinecap="round" strokeLinejoin="round" strokeWidth="1.5" d="M16 7a4 4 0 11-8 0 4 4 0 018 0zM12 14a7 7 0 00-7 7h14a7 7 0 00-7-7z" /></svg>
-                </div>
-              )}
-            </div>
-            <label className="absolute bottom-1 right-1 bg-blue-600 text-white p-2 rounded-full border-4 border-slate-950 cursor-pointer shadow-lg active:scale-90 transition-all">
-              <svg className="w-5 h-5" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path strokeLinecap="round" strokeLinejoin="round" strokeWidth="2.5" d="M3 9a2 2 0 012-2h.93a2 2 0 001.664-.89l.812-1.22A2 2 0 0110.07 4h3.86a2 2 0 011.664.89l.812 1.22A2 2 0 0018.07 7H19a2 2 0 012 2v9a2 2 0 01-2 2H5a2 2 0 01-2-2V9z" /><path strokeLinecap="round" strokeLinejoin="round" strokeWidth="2.5" d="M15 13a3 3 0 11-6 0 3 3 0 016 0z" /></svg>
-              <input type="file" className="hidden" accept="image/*" onChange={handlePhotoChange} />
-            </label>
-          </div>
-        </section>
-
         <section className="space-y-4">
-          <h2 className="text-sm font-bold text-slate-600 uppercase tracking-widest flex items-center gap-2">Informações Básicas</h2>
-          <div className="grid grid-cols-1 gap-4">
+          <h2 className="text-sm font-bold text-slate-600 uppercase tracking-widest">Informações de Contato</h2>
+          <div className="bg-slate-900 border border-slate-800 rounded-3xl p-5 space-y-4">
             <div>
-              <label className="text-[10px] font-bold text-slate-500 uppercase mb-1 block">Nome Completo</label>
-              <input 
-                value={profile.name} 
-                onChange={e => setProfile({...profile, name: e.target.value})}
-                className="w-full bg-slate-900 border border-slate-800 rounded-2xl py-3 px-4 text-white focus:ring-2 focus:ring-blue-500 outline-none transition-all"
-              />
+              <label className="text-[10px] font-bold text-slate-500 uppercase mb-1 block">E-mail</label>
+              <p className="text-white font-medium">{profile.email}</p>
             </div>
-            <div className="grid grid-cols-2 gap-4">
-              <div>
-                <label className="text-[10px] font-bold text-slate-500 uppercase mb-1 block">Cidade</label>
-                <input 
-                  value={profile.city} 
-                  onChange={e => setProfile({...profile, city: e.target.value})}
-                  className="w-full bg-slate-900 border border-slate-800 rounded-2xl py-3 px-4 text-white focus:ring-2 focus:ring-blue-500 outline-none"
-                />
-              </div>
-              <div>
-                <label className="text-[10px] font-bold text-slate-500 uppercase mb-1 block">Telefone</label>
-                <input 
-                  value={profile.phone} 
-                  onChange={e => setProfile({...profile, phone: e.target.value})}
-                  className="w-full bg-slate-900 border border-slate-800 rounded-2xl py-3 px-4 text-white focus:ring-2 focus:ring-blue-500 outline-none"
-                />
-              </div>
+            <div>
+              <label className="text-[10px] font-bold text-slate-500 uppercase mb-1 block">Telefone</label>
+              <input 
+                value={profile.phone} 
+                onChange={e => setProfile({...profile, phone: e.target.value})}
+                className="w-full bg-slate-950 border border-slate-800 rounded-xl py-3 px-4 text-white focus:ring-2 focus:ring-blue-500 outline-none"
+              />
             </div>
           </div>
         </section>

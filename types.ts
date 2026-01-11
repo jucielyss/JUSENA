@@ -34,6 +34,7 @@ export interface CandidateProfile {
   name: string;
   email: string;
   photo: string | null;
+  videoResume: string | null; // URL ou Base64 do vídeo
   city: string;
   phone: string;
   visibility: 'public' | 'anonymous';

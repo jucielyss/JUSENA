@@ -18,6 +18,15 @@ const AuthFlow: React.FC<AuthFlowProps> = ({ onAuthenticated }) => {
   const [showPassword, setShowPassword] = useState(false);
   const [photoPreview, setPhotoPreview] = useState<string | null>(null);
 
+  // Helper para cores dinâmicas
+  const theme = {
+    primary: role === 'candidate' ? 'sky' : 'emerald',
+    bgButton: role === 'candidate' ? 'bg-sky-600 hover:bg-sky-500 shadow-sky-950' : 'bg-emerald-600 hover:bg-emerald-500 shadow-emerald-950',
+    textPrimary: role === 'candidate' ? 'text-sky-500' : 'text-emerald-500',
+    ring: role === 'candidate' ? 'focus:ring-sky-500' : 'focus:ring-emerald-500',
+    border: role === 'candidate' ? 'group-hover:border-sky-500' : 'group-hover:border-emerald-500'
+  };
+
   const handleLogin = (e: React.FormEvent) => {
     e.preventDefault();
     if (email && password) {
@@ -85,11 +94,16 @@ const AuthFlow: React.FC<AuthFlowProps> = ({ onAuthenticated }) => {
     <div className="flex flex-col h-full p-8 animate-in fade-in slide-in-from-right-4 duration-300">
       <button onClick={() => setStep('user_type')} className="text-slate-400 mb-8 flex items-center gap-2 text-sm font-medium">
         <svg className="w-4 h-4" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path strokeLinecap="round" strokeLinejoin="round" strokeWidth="2" d="M15 19l-7-7 7-7" /></svg>
-        Voltar
+        Mudar tipo de conta
       </button>
 
       <h2 className="text-2xl font-bold text-white mb-2">Bem-vindo de volta!</h2>
-      <p className="text-slate-400 text-sm mb-8">Entre com seu e-mail para continuar como {role === 'candidate' ? 'candidato' : 'empresa'}.</p>
+      <p className="text-slate-400 text-sm mb-8 flex items-center gap-2">
+        Entrando como 
+        <span className={`font-bold px-2 py-0.5 rounded-lg bg-${theme.primary}-900/20 ${theme.textPrimary}`}>
+          {role === 'candidate' ? 'Candidato' : 'Empresa'}
+        </span>
+      </p>
 
       <form onSubmit={handleLogin} className="space-y-6">
         <div>
@@ -99,7 +113,7 @@ const AuthFlow: React.FC<AuthFlowProps> = ({ onAuthenticated }) => {
             required
             value={email}
             onChange={(e) => setEmail(e.target.value)}
-            className="w-full bg-slate-900 border border-slate-800 rounded-2xl py-4 px-4 text-white placeholder:text-slate-600 focus:ring-2 focus:ring-sky-500 outline-none transition-all"
+            className={`w-full bg-slate-900 border border-slate-800 rounded-2xl py-4 px-4 text-white placeholder:text-slate-600 focus:ring-2 ${theme.ring} outline-none transition-all`}
             placeholder="seu@email.com"
           />
         </div>
@@ -110,7 +124,7 @@ const AuthFlow: React.FC<AuthFlowProps> = ({ onAuthenticated }) => {
             required
             value={password}
             onChange={(e) => setPassword(e.target.value)}
-            className="w-full bg-slate-900 border border-slate-800 rounded-2xl py-4 px-4 text-white placeholder:text-slate-600 focus:ring-2 focus:ring-sky-500 outline-none transition-all"
+            className={`w-full bg-slate-900 border border-slate-800 rounded-2xl py-4 px-4 text-white placeholder:text-slate-600 focus:ring-2 ${theme.ring} outline-none transition-all`}
             placeholder="••••••••"
           />
           <button
@@ -129,7 +143,7 @@ const AuthFlow: React.FC<AuthFlowProps> = ({ onAuthenticated }) => {
         <button
           type="submit"
           disabled={!email || !password}
-          className="w-full bg-sky-600 hover:bg-sky-500 disabled:opacity-50 disabled:bg-slate-800 text-white font-bold py-4 rounded-2xl shadow-lg shadow-sky-950 transition-all active:scale-[0.98]"
+          className={`w-full ${theme.bgButton} disabled:opacity-50 disabled:bg-slate-800 text-white font-bold py-4 rounded-2xl shadow-lg transition-all active:scale-[0.98]`}
         >
           Entrar
         </button>
@@ -139,7 +153,7 @@ const AuthFlow: React.FC<AuthFlowProps> = ({ onAuthenticated }) => {
         Não tem uma conta?{' '}
         <button
           onClick={() => setStep(role === 'candidate' ? 'register_pf' : 'register_pj')}
-          className="text-sky-500 font-bold"
+          className={`${theme.textPrimary} font-bold`}
         >
           Criar conta
         </button>
